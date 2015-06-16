@@ -32,17 +32,46 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
     }
     $hasRun = TRUE;
     if (!defined('DRUPAL_ROOT')) {
-      define('DRUPAL_ROOT', '../../../../..');
+      define('DRUPAL_ROOT', self::testPath(array(
+        dirname(__FILE__) . '/../../../../..',
+        dirname(__FILE__) . '/../../../../../..',
+      ), '/includes/bootstrap.inc'));
     }
+
     require_once DRUPAL_ROOT . '/includes/bootstrap.inc';
     $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 
     // Bootstrap Drupal.
     drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
     civicrm_initialize(TRUE);
-    require_once('../../../civicrm.settings.php');
-    require_once('../../../../all/modules/civicrm/api/api.php');
+    self::testPath(array(
+      dirname(__FILE__) . '/../../..',
+      dirname(__FILE__) . '/../../../..',
+    ), '/civicrm.settings.php');
+
+    self::testPath(array(
+      dirname(__FILE__) . '/../../../../all/modules/civicrm/api',
+      dirname(__FILE__) . '/../../../../../all/modules/civicrm/api',
+    ), '/api.php');
+
     error_reporting(E_ALL);
+  }
+
+  /**
+   * Select correct path from a bunch of candidates.
+   *
+   * @param array $candidates
+   * @param string $file
+   *
+   * @return string|bool
+   */
+  public static function testPath($candidates, $file) {
+    foreach ($candidates as $candidate) {
+      if (file_exists($candidate . DIRECTORY_SEPARATOR . $file)) {
+        require_once ($candidate . DIRECTORY_SEPARATOR . $file);
+        return $candidate;
+      }
+    }
   }
 
   function setup() {
