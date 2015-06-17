@@ -100,6 +100,9 @@ function altedtriggers_civicrm_pre($op, $objectName, $id, &$params) {
 function altedtriggers_civicrm_custom($op, $groupID, $entityID, &$params) {
   // Declare hard coded fields.
   $targetGroupID = 16;
+  if ($groupID != $targetGroupID) {
+    return;
+  }
   $reviewStatusFields = array(
     1 => 139,
     2 => 143,
@@ -113,11 +116,12 @@ function altedtriggers_civicrm_custom($op, $groupID, $entityID, &$params) {
     4 => 146,
   );
 
-  if ($groupID != $targetGroupID) {
-    return;
-  }
+  $endOfSemesterFields = _altedtriggers_get_end_of_semester_fields();
+
   $fieldValues = _altedtriggers_convert_params_to_fields($params);
-  $updatedStatusFields = array_intersect_key(array_flip($reviewStatusFields), $fieldValues);
+  $allFieldsToRespondTo = array_merge($reviewStatusFields, array(5 => 229));
+  $updatedStatusFields = array_intersect_key(array_flip($allFieldsToRespondTo), $fieldValues);
+
   if (empty($updatedStatusFields)) {
     return;
   }
@@ -130,6 +134,46 @@ function altedtriggers_civicrm_custom($op, $groupID, $entityID, &$params) {
   $allCustomValues = _altedtriggers_get_all_custom_values_for_activity($entityID);
   $newCustomParams = array('id' => $entityID);
 
+  $firstReview = 'custom_' . _altedtriggers_get_first_review_field($activityStartDate);
+  if (empty($allCustomValues[$firstReview]) && empty($newCustomParams[$firstReview])) {
+    $newCustomParams[$firstReview] = isset($newCustomParams['custom_229']) ? $newCustomParams['custom_229'] : CRM_Utils_Array::value($firstReview, $allCustomValues, 1);
+  }
+
+  // Iterate through the status review date fields & set the most recent status
+  // update (field 227) to the most recent (we assume they run in order).
+  // If status if 5 set field 226 (date status 5 achieved) to that field too.
+  foreach ($reviewStatusFields as $id => $reviewStatusField) {
+    if (!empty($allCustomValues[$reviewStatusField])) {
+      $statusUpdateDate = $allCustomValues[$reviewDateFields[$id]];
+      $statusUpdateValue = $allCustomValues[$reviewStatusField];
+
+      // Update most recent data & status.
+      $newCustomParams['custom_227'] = $statusUpdateDate;
+      $newCustomParams['custom_225'] = $statusUpdateValue;
+
+      if ($statusUpdateValue == 5 && empty($newCustomParams['custom_226'])) {
+        $newCustomParams['custom_226'] = $statusUpdateDate;
+        $newCustomParams['status_id'] = 'Completed';
+      }
+      $updatePeriod = _altedtriggers_calculate_update_period($statusUpdateDate, $activityStartDate);
+      $newCustomParams['custom_' . $endOfSemesterFields[$updatePeriod]['status_field']] = $statusUpdateValue;
+      //if (_altedtriggers_previous_status_not_set($endOfSemesterFields[$updatePeriod]['previous_status'], $newCustomParams, $allCustomValues)) {
+        //_altedtriggers_set_previous_statues($endOfSemesterFields[$updatePeriod]['previous_status'], $newCustomParams, $allCustomValues, $endOfSemesterFields);
+      //}
+      $newCustomParams['custom_' . $endOfSemesterFields[$updatePeriod]['improvement']] =
+        _altedtriggers_get_difference($allCustomValues, $endOfSemesterFields[$updatePeriod]['previous_status'], $statusUpdateValue, $newCustomParams);
+    }
+  }
+
+  civicrm_api3('activity', 'create', $newCustomParams);
+}
+
+/**
+ * Get the relevant custom fields for each semester.
+ *
+ * @return array
+ */
+function _altedtriggers_get_end_of_semester_fields() {
   $endOfSemesterFields = array(
     'mid-1' => array(
       'status_field' => 230,
@@ -164,33 +208,27 @@ function altedtriggers_civicrm_custom($op, $groupID, $entityID, &$params) {
       'previous_status' => 230,
     ),
   );
-  // Iterate through the status review date fields & set the most recent status
-  // update (field 227) to the most recent (we assume they run in order).
-  // If status if 5 set field 226 (date status 5 achieved) to that field too.
-  foreach ($reviewStatusFields as $id => $reviewStatusField) {
-    if (!empty($allCustomValues[$reviewStatusField])) {
-      $statusUpdateDate = $allCustomValues[$reviewDateFields[$id]];
-      $statusUpdateValue = $allCustomValues[$reviewStatusField];
+  return $endOfSemesterFields;
+}
 
-      // Update most recent data & status.
-      $newCustomParams['custom_227'] = $statusUpdateDate;
-      $newCustomParams['custom_225'] = $statusUpdateValue;
+/**
+ * Set the first review status (mid or end of year) to initial status.
+ *
+ * @param $newCustomParams
+ * @param $activityStartDate
+ */
+function _altedtriggers_set_first_review(&$newCustomParams, $activityStartDate) {
+  $firstReview = _altedtriggers_get_review_order($activityStartDate);
+}
 
-      if ($statusUpdateValue == 5 && empty($newCustomParams['custom_226'])) {
-        $newCustomParams['custom_226'] = $statusUpdateDate;
-        $newCustomParams['status_id'] = 'Completed';
-      }
-      $updatePeriod = _altedtriggers_calculate_update_period($statusUpdateDate, $activityStartDate);
-      $newCustomParams['custom_' . $endOfSemesterFields[$updatePeriod]['status_field']] = $statusUpdateValue;
-      //if (_altedtriggers_previous_status_not_set($endOfSemesterFields[$updatePeriod]['previous_status'], $newCustomParams, $allCustomValues)) {
-        //_altedtriggers_set_previous_statues($endOfSemesterFields[$updatePeriod]['previous_status'], $newCustomParams, $allCustomValues, $endOfSemesterFields);
-      //}
-      $newCustomParams['custom_' . $endOfSemesterFields[$updatePeriod]['improvement']] =
-        _altedtriggers_get_difference($allCustomValues, $endOfSemesterFields[$updatePeriod]['previous_status'], $statusUpdateValue, $newCustomParams);
-    }
-  }
-
-  civicrm_api3('activity', 'create', $newCustomParams);
+/**
+ * @param string $activityStartDate
+ */
+function _altedtriggers_get_first_review_field($activityStartDate) {
+  $reviewFields = _altedtriggers_get_review_order($activityStartDate);
+  $firstReview = reset(array_flip($reviewFields));
+  $endOfSemesterFields = _altedtriggers_get_end_of_semester_fields();
+  return $endOfSemesterFields[$firstReview]['status_field'];
 }
 
 /**
@@ -203,7 +241,7 @@ function altedtriggers_civicrm_custom($op, $groupID, $entityID, &$params) {
  *
  * @return bool Does previous half year period need to be calculated?
  * Does previous half year period need to be calculated?
- */
+
 function _altedtriggers_previous_status_not_set($previousStatusField, $newCustomParams, $allCustomValues) {
   if (!empty($newCustomParams['custom_' . $previousStatusField]) || !empty($allCustomValues['custom_' . $previousStatusField])) {
     return FALSE;
@@ -215,10 +253,11 @@ function _altedtriggers_previous_status_not_set($previousStatusField, $newCustom
  * Ensure previous status values are set as a review has been skipped
  *
  * @param $endOfSemesterFields
- */
+ *
 function _altedtriggers_set_previous_statues($status, $newCustomParams, $allCustomValues, $endOfSemesterFields) {
 
 }
+*/
 
 /**
  * Check which the period the review falls in.
@@ -234,6 +273,23 @@ function _altedtriggers_set_previous_statues($status, $newCustomParams, $allCust
  * @throws \Exception
  */
 function _altedtriggers_calculate_update_period($statusUpdateDate, $activityStartDate) {
+  $checkingOrder = _altedtriggers_get_review_order($activityStartDate);
+  foreach ($checkingOrder as $key => $value) {
+    if (strtotime($statusUpdateDate) < $value) {
+      return $key;
+    }
+  }
+  throw new Exception('review is not within a valid time period');
+}
+
+/**
+ * Get the order of reviews - this is affected by the start date.
+ *
+ * @param string $activityStartDate
+ *
+ * @return array
+ */
+function _altedtriggers_get_review_order($activityStartDate) {
   $activityStartYear = date('Y', strtotime($activityStartDate));
   $midYearDate = _altedtriggers_get_alted_mid_year_date($activityStartYear, $activityStartDate);
   $endOfYearDate = '31 December ' . $activityStartYear;
@@ -247,6 +303,7 @@ function _altedtriggers_calculate_update_period($statusUpdateDate, $activityStar
       'mid-2' => strtotime($secondMidYearDate),
       'end-2' => strtotime($secondEndOfYearDate),
     );
+    return $checkingOrder;
   }
   else {
     $checkingOrder = array(
@@ -255,13 +312,8 @@ function _altedtriggers_calculate_update_period($statusUpdateDate, $activityStar
       'end-2-2' => strtotime($secondEndOfYearDate),
       'mid-2-2' => strtotime($secondMidYearDate),
     );
+    return $checkingOrder;
   }
-  foreach ($checkingOrder as $key => $value) {
-    if (strtotime($statusUpdateDate) < $value) {
-      return $key;
-    }
-  }
-  throw new Exception('review is not within a valid time period');
 }
 
 /**

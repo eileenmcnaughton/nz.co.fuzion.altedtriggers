@@ -325,14 +325,8 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
     civicrm_api3('activity', 'create', array(
       'id' => $this->activityID,
       'activity_date_time' => '1 Sep 2015',
-      'custom_138' => '1 Nov 2015',
-      'custom_139' => 1,
-      'custom_142' => '1 Feb 2016',
-      'custom_143' => 2,
-      'custom_144' => '1 Mar 2016',
-      'custom_145' => 3,
-      'custom_146' => '1 Feb 2017',
-      'custom_147' => 5,
+      'custom_138' => '1 Feb 2016',
+      'custom_139' => 3,
     ));
 
     $this->assertActivityCustomValues(
@@ -346,22 +340,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
         'custom_230' => 3,
         // Mid year improvement
         'custom_233' => 2,
-        // End of year 2 status
-        'custom_245' => 3,
-        // End of year 2 improvement
-        'custom_243' => 0,
-        // Mid year 2 status
-        'custom_242' => 5,
-        // Mid Year 2 improvement
-        'custom_244' => 2,
       )
-    );
-    $this->assertActivityCustomValues(
-      $this->activityID,
-      array(
-        'custom_226' => '1 Feb 2017',
-      ),
-      'date'
     );
   }
 
