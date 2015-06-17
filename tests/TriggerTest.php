@@ -91,6 +91,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
       'activity_type_id' => 52,
       'source_contact_id' => $this->individualID,
       'activity_date_time' => '1 Feb 2015',
+      'status_id' => 1,
     ));
     $this->activityID = $activity['id'];
   }
@@ -132,7 +133,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
       'return.custom' => TRUE,
     ));
     $this->assertEquals(strtotime('1 April 2015'), strtotime($activity['custom_227']));
-    $this->assertEquals(2, $activity['status_id']);
+    $this->assertEquals(1, $activity['status_id']);
   }
 
   /**
@@ -169,7 +170,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
 
     $this->assertEquals(strtotime('1 May 2015'), strtotime($activity['custom_227']));
     $this->assertEquals(strtotime('1 May 2015'), strtotime($activity['custom_226']));
-    $this->assertEquals(1, $activity['status_id']);
+    $this->assertEquals(2, $activity['status_id']);
   }
 
   /**
@@ -200,7 +201,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
 
     $this->assertEquals(strtotime('1 May 2015'), strtotime($activity['custom_227']));
     $this->assertEquals(strtotime('1 April 2015'), strtotime($activity['custom_226']));
-    $this->assertEquals(1, $activity['status_id']);
+    $this->assertEquals(2, $activity['status_id']);
   }
 
   /**
@@ -253,7 +254,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
         'custom_230' => 3,
         'custom_232' => 2,
         'custom_234' => 5,
-        'status_id' => 1,
+        'status_id' => 2,
       )
     );
   }

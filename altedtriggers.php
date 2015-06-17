@@ -139,7 +139,7 @@ function altedtriggers_civicrm_custom($op, $groupID, $entityID, &$params) {
       $newCustomParams['custom_227'] = $statusUpdateDate;
       if ($statusUpdateValue == 5 && empty($newCustomParams['custom_226'])) {
         $newCustomParams['custom_226'] = $statusUpdateDate;
-        $newCustomParams['status_id'] = 1;
+        $newCustomParams['status_id'] = 'Completed';
       }
       $updatePeriod = _altedtriggers_calculate_update_period($statusUpdateDate, $activityStartDate);
       switch ($updatePeriod) {
