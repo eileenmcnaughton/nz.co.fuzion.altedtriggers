@@ -4,6 +4,8 @@ require_once 'altedtriggers.civix.php';
 
 /**
  * Implementation of hook_civicrm_config
+ *
+ * @param CRM_Core_Config $config
  */
 function altedtriggers_civicrm_config(&$config) {
   _altedtriggers_civix_civicrm_config($config);
@@ -180,9 +182,9 @@ function altedtriggers_civicrm_custom($op, $groupID, $entityID, &$params) {
       }
       $updatePeriod = _altedtriggers_calculate_update_period($statusUpdateDate, $activityStartDate);
       $newCustomParams['custom_' . $endOfSemesterFields[$updatePeriod]['status_field']] = $statusUpdateValue;
-      if (_altedtriggers_previous_status_not_set($endOfSemesterFields[$updatePeriod]['previous_status'], $newCustomParams, $allCustomValues)) {
-        _altedtriggers_set_previous_statues($endOfSemesterFields[$updatePeriod]['previous_status'], $newCustomParams, $allCustomValues, $endOfSemesterFields);
-      }
+      //if (_altedtriggers_previous_status_not_set($endOfSemesterFields[$updatePeriod]['previous_status'], $newCustomParams, $allCustomValues)) {
+        //_altedtriggers_set_previous_statues($endOfSemesterFields[$updatePeriod]['previous_status'], $newCustomParams, $allCustomValues, $endOfSemesterFields);
+      //}
       $newCustomParams['custom_' . $endOfSemesterFields[$updatePeriod]['improvement']] =
         _altedtriggers_get_difference($allCustomValues, $endOfSemesterFields[$updatePeriod]['previous_status'], $statusUpdateValue, $newCustomParams);
     }
@@ -195,13 +197,14 @@ function altedtriggers_civicrm_custom($op, $groupID, $entityID, &$params) {
  * Check to make sure previous status has been set (not a skipped period)
  *
  * @params int $previousStatusField
+ * @param $previousStatusField
  * @param array $newCustomParams
  * @param array $allCustomValues
  *
- * @return bool
- *   Does previous half year period need to be calculated?
+ * @return bool Does previous half year period need to be calculated?
+ * Does previous half year period need to be calculated?
  */
-public function _altedtriggers_previous_status_not_set($previousStatusField, $newCustomParams, $allCustomValues) {
+function _altedtriggers_previous_status_not_set($previousStatusField, $newCustomParams, $allCustomValues) {
   if (!empty($newCustomParams['custom_' . $previousStatusField]) || !empty($allCustomValues['custom_' . $previousStatusField])) {
     return FALSE;
   }
@@ -213,7 +216,7 @@ public function _altedtriggers_previous_status_not_set($previousStatusField, $ne
  *
  * @param $endOfSemesterFields
  */
-public function _altedtriggers_set_previous_statues($endOfSemesterFields[$updatePeriod]['previous_status'], $newCustomParams, $allCustomValues, $endOfSemesterFields) {
+function _altedtriggers_set_previous_statues($status, $newCustomParams, $allCustomValues, $endOfSemesterFields) {
 
 }
 
