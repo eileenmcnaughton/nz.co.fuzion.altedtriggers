@@ -72,6 +72,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
         return $candidate;
       }
     }
+    return NULL;
   }
 
   function setup() {
@@ -127,10 +128,11 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
 
     $activity = civicrm_api3('activity', 'getsingle', array(
       'id' => $this->activityID,
-      'return' => 'custom_227,custom_139',
+      'return' => 'custom_227,custom_139,status_id',
       'return.custom' => TRUE,
     ));
     $this->assertEquals(strtotime('1 April 2015'), strtotime($activity['custom_227']));
+    $this->assertEquals(2, $activity['status_id']);
   }
 
   /**
@@ -162,11 +164,12 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
 
     $activity = civicrm_api3('activity', 'getsingle', array(
       'id' => $this->activityID,
-      'return' => 'custom_227,custom_139,custom_226',
+      'return' => 'custom_227,custom_139,custom_226,status_id',
     ));
 
     $this->assertEquals(strtotime('1 May 2015'), strtotime($activity['custom_227']));
     $this->assertEquals(strtotime('1 May 2015'), strtotime($activity['custom_226']));
+    $this->assertEquals(1, $activity['status_id']);
   }
 
   /**
@@ -192,11 +195,12 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
 
     $activity = civicrm_api3('activity', 'getsingle', array(
       'id' => $this->activityID,
-      'return' => 'custom_227,custom_139,custom_226',
+      'return' => 'custom_227,custom_139,custom_226,status_id',
     ));
 
     $this->assertEquals(strtotime('1 May 2015'), strtotime($activity['custom_227']));
     $this->assertEquals(strtotime('1 April 2015'), strtotime($activity['custom_226']));
+    $this->assertEquals(1, $activity['status_id']);
   }
 
   /**
@@ -249,6 +253,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
         'custom_230' => 3,
         'custom_232' => 2,
         'custom_234' => 5,
+        'status_id' => 1,
       )
     );
   }

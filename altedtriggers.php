@@ -66,7 +66,7 @@ function altedtriggers_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
  * is installed, disabled, uninstalled.
  */
 function altedtriggers_civicrm_managed(&$entities) {
-  return _altedtriggers_civix_civicrm_managed($entities);
+  _altedtriggers_civix_civicrm_managed($entities);
 }
 
 /**
@@ -139,6 +139,7 @@ function altedtriggers_civicrm_custom($op, $groupID, $entityID, &$params) {
       $newCustomParams['custom_227'] = $statusUpdateDate;
       if ($statusUpdateValue == 5 && empty($newCustomParams['custom_226'])) {
         $newCustomParams['custom_226'] = $statusUpdateDate;
+        $newCustomParams['status_id'] = 1;
       }
       $updatePeriod = _altedtriggers_calculate_update_period($statusUpdateDate, $activityStartDate);
       switch ($updatePeriod) {
@@ -278,6 +279,14 @@ function _altedtriggers_get_alted_mid_year_date($year, $activityStartDate = NULL
   return $midYearDate;
 }
 
+/**
+ * Get all custom values for an activity in 4 => value type array.
+ *
+ * @param int $activityID
+ *
+ * @return array
+ * @throws \CiviCRM_API3_Exception
+ */
 function _altedtriggers_get_all_custom_values_for_activity($activityID) {
   return _altedtriggers_convert_custom_values_to_fields(civicrm_api3('custom_value', 'get', array(
     'entity_id' => $activityID,
