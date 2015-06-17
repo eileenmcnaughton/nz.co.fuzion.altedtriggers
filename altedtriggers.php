@@ -136,7 +136,10 @@ function altedtriggers_civicrm_custom($op, $groupID, $entityID, &$params) {
       $statusUpdateDate = $allCustomValues[$reviewDateFields[$id]];
       $statusUpdateValue = $allCustomValues[$reviewStatusField];
 
+      // Update most recent data & status.
       $newCustomParams['custom_227'] = $statusUpdateDate;
+      $newCustomParams['custom_225'] = $statusUpdateValue;
+
       if ($statusUpdateValue == 5 && empty($newCustomParams['custom_226'])) {
         $newCustomParams['custom_226'] = $statusUpdateDate;
         $newCustomParams['status_id'] = 'Completed';

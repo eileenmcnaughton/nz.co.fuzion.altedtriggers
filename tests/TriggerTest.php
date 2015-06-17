@@ -223,6 +223,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
       $this->activityID,
       array(
         'custom_230' => 3,
+        'custom_225' => 3,
       )
     );
 
@@ -236,6 +237,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
       $this->activityID,
       array(
         'custom_230' => 4,
+        'custom_225' => 4,
       )
     );
 
@@ -255,6 +257,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
         'custom_232' => 2,
         'custom_234' => 5,
         'status_id' => 2,
+        'custom_225' => 5,
       )
     );
   }
@@ -290,6 +293,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
         'custom_242' => 3,
         'custom_243' => 2,
         'custom_245' => 5,
+        'custom_225' => 5,
       )
     );
     $this->assertActivityCustomValues(
