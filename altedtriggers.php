@@ -128,6 +128,40 @@ function altedtriggers_civicrm_custom($op, $groupID, $entityID, &$params) {
   $allCustomValues = _altedtriggers_get_all_custom_values_for_activity($entityID);
   $newCustomParams = array('id' => $entityID);
 
+  $endOfSemesterFields = array(
+    'mid-1' => array(
+      'status_field' => 230,
+      'improvement' => 233,
+      'previous_status' => 229,
+    ),
+    'end-1' => array(
+      'status_field' => 234,
+      'improvement' => 232,
+      'previous_status' => 230,
+    ),
+    'mid-2' => array(
+      'status_field' => 242,
+      'improvement' => 244,
+      'previous_status' => 234,
+    ),
+    'end-2' => array(
+      'status_field' => 245,
+      'improvement' => 243,
+      'previous_status' => 242,
+    ),
+    // In this case we are AFTER the 2nd end of year so we use that as our base.
+    'mid-2-2' => array(
+      'status_field' => 242,
+      'improvement' => 244,
+      'previous_status' => 245,
+    ),
+    // In this case second mid term is still in the future we use the first mid-term as our base.
+    'end-2-2' => array(
+      'status_field' => 245,
+      'improvement' => 243,
+      'previous_status' => 230,
+    ),
+  );
   // Iterate through the status review date fields & set the most recent status
   // update (field 227) to the most recent (we assume they run in order).
   // If status if 5 set field 226 (date status 5 achieved) to that field too.
@@ -145,44 +179,41 @@ function altedtriggers_civicrm_custom($op, $groupID, $entityID, &$params) {
         $newCustomParams['status_id'] = 'Completed';
       }
       $updatePeriod = _altedtriggers_calculate_update_period($statusUpdateDate, $activityStartDate);
-      switch ($updatePeriod) {
-        case 'mid-1' :
-          $newCustomParams['custom_230'] = $statusUpdateValue;
-          $newCustomParams['custom_233'] = _altedtriggers_get_difference($allCustomValues, 229, $statusUpdateValue, $newCustomParams);
-          break;
-
-        case 'end-1' :
-          $newCustomParams['custom_234'] = $statusUpdateValue;
-          $newCustomParams['custom_232'] = _altedtriggers_get_difference($allCustomValues, 230, $statusUpdateValue, $newCustomParams);
-          break;
-
-        case 'mid-2' :
-          $newCustomParams['custom_242'] = $statusUpdateValue;
-          $newCustomParams['custom_244'] = _altedtriggers_get_difference($allCustomValues, 234, $statusUpdateValue, $newCustomParams);
-          break;
-
-        case 'end-2' :
-          $newCustomParams['custom_245'] = $statusUpdateValue;
-          $newCustomParams['custom_243'] = _altedtriggers_get_difference($allCustomValues, 242, $statusUpdateValue, $newCustomParams);
-          break;
-
-        case 'mid-2-2' :
-          // In this case we are AFTER the 2nd end of year so we use that as our base.
-          $newCustomParams['custom_242'] = $statusUpdateValue;
-          $newCustomParams['custom_244'] = _altedtriggers_get_difference($allCustomValues, 245, $statusUpdateValue, $newCustomParams);
-          break;
-
-        case 'end-2-2' :
-          // In this case second mid term is still in the future we use the first mid-term as our base.
-          $newCustomParams['custom_245'] = $statusUpdateValue;
-          $newCustomParams['custom_243'] = _altedtriggers_get_difference($allCustomValues, 230, $statusUpdateValue, $newCustomParams);
-          break;
+      $newCustomParams['custom_' . $endOfSemesterFields[$updatePeriod]['status_field']] = $statusUpdateValue;
+      if (_altedtriggers_previous_status_not_set($endOfSemesterFields[$updatePeriod]['previous_status'], $newCustomParams, $allCustomValues)) {
+        _altedtriggers_set_previous_statues($endOfSemesterFields[$updatePeriod]['previous_status'], $newCustomParams, $allCustomValues, $endOfSemesterFields);
       }
-
+      $newCustomParams['custom_' . $endOfSemesterFields[$updatePeriod]['improvement']] =
+        _altedtriggers_get_difference($allCustomValues, $endOfSemesterFields[$updatePeriod]['previous_status'], $statusUpdateValue, $newCustomParams);
     }
   }
 
   civicrm_api3('activity', 'create', $newCustomParams);
+}
+
+/**
+ * Check to make sure previous status has been set (not a skipped period)
+ *
+ * @params int $previousStatusField
+ * @param array $newCustomParams
+ * @param array $allCustomValues
+ *
+ * @return bool
+ *   Does previous half year period need to be calculated?
+ */
+public function _altedtriggers_previous_status_not_set($previousStatusField, $newCustomParams, $allCustomValues) {
+  if (!empty($newCustomParams['custom_' . $previousStatusField]) || !empty($allCustomValues['custom_' . $previousStatusField])) {
+    return FALSE;
+  }
+  return TRUE;
+}
+
+/**
+ * Ensure previous status values are set as a review has been skipped
+ *
+ * @param $endOfSemesterFields
+ */
+public function _altedtriggers_set_previous_statues($endOfSemesterFields[$updatePeriod]['previous_status'], $newCustomParams, $allCustomValues, $endOfSemesterFields) {
 
 }
 

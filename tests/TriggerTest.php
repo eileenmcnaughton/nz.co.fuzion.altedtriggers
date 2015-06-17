@@ -286,13 +286,24 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
     $this->assertActivityCustomValues(
       $this->activityID,
       array(
+        // Mid year 1 status.
         'custom_230' => 1,
-        'custom_232' => 1,
+        // End of year 1 status.
         'custom_234' => 2,
-        'custom_244' => 1,
+        // Mid year status - year 2.
         'custom_242' => 3,
-        'custom_243' => 2,
+        // End of  year status - year 2.
         'custom_245' => 5,
+
+        // Year 2 mid-year improvement
+        'custom_233' => 0,
+        // End of year 1 improvement.
+        'custom_232' => 1,
+        // Year 2 mid-year improvement
+        'custom_244' => 1,
+        // Year 2 end of year improvement
+        'custom_243' => 2,
+
         'custom_225' => 5,
       )
     );
@@ -304,6 +315,56 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
       'date'
     );
   }
+
+  /**
+   * Test if a half year passes with no review the end of half year status is set.
+   *
+   * @throws \CiviCRM_API3_Exception
+   */
+  function testActivityUpdateSkipHalfYearStartDate() {
+    civicrm_api3('activity', 'create', array(
+      'id' => $this->activityID,
+      'activity_date_time' => '1 Sep 2015',
+      'custom_138' => '1 Nov 2015',
+      'custom_139' => 1,
+      'custom_142' => '1 Feb 2016',
+      'custom_143' => 2,
+      'custom_144' => '1 Mar 2016',
+      'custom_145' => 3,
+      'custom_146' => '1 Feb 2017',
+      'custom_147' => 5,
+    ));
+
+    $this->assertActivityCustomValues(
+      $this->activityID,
+      array(
+        // End of year 1 status.
+        'custom_234' => 1,
+        // End of year improvement
+        'custom_232' => 0,
+        // Mid year status
+        'custom_230' => 3,
+        // Mid year improvement
+        'custom_233' => 2,
+        // End of year 2 status
+        'custom_245' => 3,
+        // End of year 2 improvement
+        'custom_243' => 0,
+        // Mid year 2 status
+        'custom_242' => 5,
+        // Mid Year 2 improvement
+        'custom_244' => 2,
+      )
+    );
+    $this->assertActivityCustomValues(
+      $this->activityID,
+      array(
+        'custom_226' => '1 Feb 2017',
+      ),
+      'date'
+    );
+  }
+
 
   /**
    * Test that updating first progress check (custom 139) updates other fields.
@@ -332,18 +393,19 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
       array(
         // End of year status.
         'custom_234' => 1,
-        // End of year improvement
-        'custom_232' => 0,
         // Mid year status
         'custom_230' => 2,
-        // Mid year improvement
-        'custom_233' => 1,
         // End of year 2 status
         'custom_245' => 3,
-        // End of year 2 improvement
-        'custom_243' => 1,
         // Mid year 2 status
         'custom_242' => 5,
+
+        // End of year improvement
+        'custom_232' => 0,
+        // Mid year improvement
+        'custom_233' => 1,
+        // End of year 2 improvement
+        'custom_243' => 1,
         // Mid Year 2 improvement
         'custom_244' => 2,
       )
