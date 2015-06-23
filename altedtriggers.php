@@ -160,8 +160,9 @@ function altedtriggers_civicrm_custom($op, $groupID, $entityID, &$params) {
       //if (_altedtriggers_previous_status_not_set($endOfSemesterFields[$updatePeriod]['previous_status'], $newCustomParams, $allCustomValues)) {
         //_altedtriggers_set_previous_statues($endOfSemesterFields[$updatePeriod]['previous_status'], $newCustomParams, $allCustomValues, $endOfSemesterFields);
       //}
-      $newCustomParams['custom_' . $endOfSemesterFields[$updatePeriod]['improvement']] =
-        _altedtriggers_get_difference($allCustomValues, $endOfSemesterFields[$updatePeriod]['previous_status'], $statusUpdateValue, $newCustomParams);
+      $statusUpdateField = 'custom_' . $endOfSemesterFields[$updatePeriod]['improvement'];
+      $newCustomParams[$statusUpdateField] =
+        _altedtriggers_get_difference($allCustomValues, $endOfSemesterFields[$updatePeriod]['previous_status'], $statusUpdateValue, $newCustomParams, $statusUpdateField);
     }
   }
 
@@ -332,16 +333,21 @@ function _altedtriggers_get_review_order($activityStartDate) {
  * @param array $allCustomValues
  * @param int $customFieldID
  * @param int $newValue
+ * @param string $statusUpdateField
+ *   The field whose status is to be updated. We don't change this if the are ceased.
  *
  * @param array $newCustomParams
  *   Calculated custom parameters (we give these precedence over DB ones).
  *
  * @return int
  */
-function _altedtriggers_get_difference($allCustomValues, $customFieldID, $newValue, $newCustomParams) {
+function _altedtriggers_get_difference($allCustomValues, $customFieldID, $newValue, $newCustomParams, $statusUpdateField) {
   $customFieldName = 'custom_' . $customFieldID;
   $originalValue = !empty($newCustomParams[$customFieldName]) ? $newCustomParams[$customFieldName] : CRM_Utils_Array::value($customFieldID, $allCustomValues, 1);
   $difference = $newValue - $originalValue;
+  if ($newValue == 6) {
+    return !empty($newCustomParams[$statusUpdateField]) ? $newCustomParams[$statusUpdateField] : CRM_Utils_Array::value($customFieldID, $allCustomValues, 0);
+  }
   if ($difference > 0) {
     return $difference;
   }

@@ -137,6 +137,59 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
+   * Test that updating status to ceased sets correct progress.
+   *
+   * @throws \CiviCRM_API3_Exception
+   */
+  function testActivityUpdateStatusCeased() {
+    civicrm_api3('activity', 'create', array(
+      'id' => $this->activityID,
+      'custom_139' => 2,
+      'custom_138' => '1 April 2015',
+      'custom_143' => 6,
+      'custom_142' => '1 Oct 2015',
+    ));
+
+    $this->assertActivityCustomValues(
+      $this->activityID,
+      array(
+        // Mid year 1 status.
+        'custom_230' => 2,
+        // End of year 1 status.
+        'custom_234' => 6,
+        // End of year 1 improvement.
+        $this->getCustomField('end-year-1-improvement') => 0,
+      )
+    );
+  }
+
+  /**
+   * Test that updating status to ceased sets correct progress.
+   *
+   * With this data there has been some progress in the half they were ceased
+   *
+   * @throws \CiviCRM_API3_Exception
+   */
+  function testActivityUpdateStatusCeasedSomeProgress() {
+    civicrm_api3('activity', 'create', array(
+      'id' => $this->activityID,
+      'custom_139' => 2,
+      'custom_138' => '1 April 2015',
+      'custom_143' => 6,
+      'custom_142' => '1 May 2015',
+    ));
+
+    $this->assertActivityCustomValues(
+      $this->activityID,
+      array(
+        // Mid year 1 status.
+        'custom_230' => 6,
+        $this->getCustomField('mid-year-1-improvement') => 1,
+      )
+    );
+  }
+
+  /**
    * Test that updating first progress check (custom 139) updates other fields.
    *
    *  - if status = 5 AND custom 226 is empty alter custom 226 to be same date.
@@ -254,7 +307,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
       $this->activityID,
       array(
         'custom_230' => 3,
-        'custom_232' => 2,
+        $this->getCustomField('end-year-1-improvement') => 2,
         'custom_234' => 5,
         'status_id' => 2,
         'custom_225' => 5,
@@ -298,7 +351,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
         // Year 2 mid-year improvement
         'custom_233' => 0,
         // End of year 1 improvement.
-        'custom_232' => 1,
+        $this->getCustomField('end-year-1-improvement') => 1,
         // Year 2 mid-year improvement
         'custom_244' => 1,
         // Year 2 end of year improvement
@@ -335,11 +388,11 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
         // End of year 1 status.
         'custom_234' => 1,
         // End of year improvement
-        'custom_232' => 0,
+        $this->getCustomField('end-year-1-improvement') => 0,
         // Mid year status
         'custom_230' => 3,
         // Mid year improvement
-        'custom_233' => 2,
+        $this->getCustomField('mid-year-1-improvement') => 2,
       )
     );
   }
@@ -380,7 +433,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
         'custom_242' => 5,
 
         // End of year improvement
-        'custom_232' => 0,
+        $this->getCustomField('end-year-1-improvement') => 0,
         // Mid year improvement
         'custom_233' => 1,
         // End of year 2 improvement
@@ -436,7 +489,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
         'custom_230' => 3,
 
         // End of year improvement
-        'custom_232' => 1,
+        $this->getCustomField('end-year-1-improvement') => 1,
         // Mid year improvement
         'custom_233' => 1,
       )
@@ -466,5 +519,21 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals($activity[$key], $value, 'Failed on ' . $key);
       }
     }
+  }
+
+  /**
+   * Get the relevant custom field for the function.
+   *
+   * @param string $function
+   *
+   * @return string
+   */
+  function getCustomField($function) {
+    $fields = array(
+      'mid-year-1-improvement' => 'custom_233',
+      'end-year-1-improvement' => 'custom_232',
+    );
+    return $fields[$function];
+
   }
 }
