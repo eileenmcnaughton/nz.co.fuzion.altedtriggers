@@ -195,6 +195,11 @@ function _altedtriggers_get_end_of_semester_fields() {
       'improvement' => 243,
       'previous_status' => 242,
     ),
+    'end-1-2' => array(
+      'status_field' => 234,
+      'improvement' => 232,
+      'previous_status' => 220,
+    ),
     'mid-1-2' => array(
       'status_field' => 230,
       'improvement' => 233,
@@ -312,7 +317,7 @@ function _altedtriggers_get_review_order($activityStartDate) {
   }
   else {
     $checkingOrder = array(
-      'end-1' => strtotime($endOfYearDate),
+      'end-1-2' => strtotime($endOfYearDate),
       'mid-1-2' => strtotime($midYearDate),
       'end-2-2' => strtotime($secondEndOfYearDate),
       'mid-2-2' => strtotime($secondMidYearDate),
