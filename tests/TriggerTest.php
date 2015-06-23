@@ -399,6 +399,37 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
+   * Checks a date variant Gemma identified as not working.
+   *
+   * @throws \CiviCRM_API3_Exception
+   */
+  function testActivityUpdateTermTwoStartAlternateDetails() {
+    civicrm_api3('activity', 'create', array(
+      'id' => $this->activityID,
+      'activity_date_time' => '22 Oct 2014',
+      'custom_138' => '20 Nov 2014 ',
+      'custom_139' => 2,
+      'custom_142' => '8th Apr, 2015',
+      'custom_143' => 3,
+    ));
+
+    $this->assertActivityCustomValues(
+      $this->activityID,
+      array(
+        // End of year status.
+        'custom_234' => 2,
+        // Mid year status
+        'custom_230' => 3,
+
+        // End of year improvement
+        'custom_232' => 1,
+        // Mid year improvement
+        'custom_233' => 1,
+      )
+    );
+  }
+
+  /**
    * Retrieve activity and check custom values on it.
    *
    * @param $activityID
