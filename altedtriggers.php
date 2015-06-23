@@ -157,12 +157,12 @@ function altedtriggers_civicrm_custom($op, $groupID, $entityID, &$params) {
       }
       $updatePeriod = _altedtriggers_calculate_update_period($statusUpdateDate, $activityStartDate);
       $newCustomParams['custom_' . $endOfSemesterFields[$updatePeriod]['status_field']] = $statusUpdateValue;
-      //if (_altedtriggers_previous_status_not_set($endOfSemesterFields[$updatePeriod]['previous_status'], $newCustomParams, $allCustomValues)) {
-        //_altedtriggers_set_previous_statues($endOfSemesterFields[$updatePeriod]['previous_status'], $newCustomParams, $allCustomValues, $endOfSemesterFields);
-      //}
-      $statusUpdateField = 'custom_' . $endOfSemesterFields[$updatePeriod]['improvement'];
-      $newCustomParams[$statusUpdateField] =
-        _altedtriggers_get_difference($allCustomValues, $endOfSemesterFields[$updatePeriod]['previous_status'], $statusUpdateValue, $newCustomParams, $statusUpdateField);
+
+      if ($statusUpdateValue != 6) {
+        $improvementField = 'custom_' . $endOfSemesterFields[$updatePeriod]['improvement'];
+        $newCustomParams[$improvementField] =
+          _altedtriggers_get_difference($allCustomValues, $endOfSemesterFields[$updatePeriod]['previous_status'], $statusUpdateValue, $newCustomParams, $statusUpdateField);
+      }
     }
   }
 
@@ -178,7 +178,7 @@ function _altedtriggers_get_end_of_semester_fields() {
   $endOfSemesterFields = array(
     'mid-1' => array(
       'status_field' => 230,
-      'improvement' => 233,
+      'improvement' => _altedtriggers_civicrm_get_custom_field('mid-year-1-improvement',''),
       'previous_status' => 229,
     ),
     'end-1' => array(
@@ -203,7 +203,7 @@ function _altedtriggers_get_end_of_semester_fields() {
     ),
     'mid-1-2' => array(
       'status_field' => 230,
-      'improvement' => 233,
+      'improvement' => _altedtriggers_civicrm_get_custom_field('mid-year-1-improvement',''),
       'previous_status' => 234,
     ),
     // In this case we are AFTER the 2nd end of year so we use that as our base.
@@ -459,6 +459,28 @@ function altedtriggers_updates() {
   //
   // Step 8. Set end of year improvement to being end of year - mid year where end of year <> 6
   //
+
+}
+
+/**
+ * Get the relevant custom field for the function.
+ *
+ * @param string $function
+ * @param string $prefix
+ *   String to prepend, generally 'custom_' or ''.
+ *
+ * @return string
+ */
+function _altedtriggers_civicrm_get_custom_field($function, $prefix = 'custom_') {
+  $fields = array(
+    'review-status-1' => 139,
+    'review-status-2' => 143,
+    'mid-year-1-status' => 230,
+    'end-year-1-status' => 234,
+    'mid-year-1-improvement' => 233,
+    'end-year-1-improvement' => 232,
+  );
+  return $prefix . $fields[$function];
 
 }
 

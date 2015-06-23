@@ -90,7 +90,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
     $activity = civicrm_api3('activity', 'create', array(
       'activity_type_id' => 52,
       'source_contact_id' => $this->individualID,
-      'activity_date_time' => '1 Feb 2015',
+      'activity_date_time' => '1 Jan 2015',
       'status_id' => 1,
     ));
     $this->activityID = $activity['id'];
@@ -123,7 +123,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
   function testActivityUpdate() {
     civicrm_api3('activity', 'create', array(
       'id' => $this->activityID,
-      'custom_139' => 2,
+      $this->getCustomField('review-status-1') => 2,
       'custom_138' => '1 April 2015',
     ));
 
@@ -144,7 +144,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
   function testActivityUpdateStatusCeased() {
     civicrm_api3('activity', 'create', array(
       'id' => $this->activityID,
-      'custom_139' => 2,
+      $this->getCustomField('review-status-1') => 2,
       'custom_138' => '1 April 2015',
       'custom_143' => 6,
       'custom_142' => '1 Oct 2015',
@@ -173,7 +173,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
   function testActivityUpdateStatusCeasedSomeProgress() {
     civicrm_api3('activity', 'create', array(
       'id' => $this->activityID,
-      'custom_139' => 2,
+      $this->getCustomField('review-status-1') => 2,
       'custom_138' => '1 April 2015',
       'custom_143' => 6,
       'custom_142' => '1 May 2015',
@@ -190,6 +190,34 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
+   * Test that updating status to ceased sets correct progress.
+   *
+   * With this data there has been some progress in the half they were ceased
+   *
+   * @throws \CiviCRM_API3_Exception
+   */
+  function testActivityUpdateStatusCeasedAlternativeValues() {
+    civicrm_api3('activity', 'create', array(
+      'activity_date_time' => '17 Oct 2014',
+      'id' => $this->activityID,
+      $this->getCustomField('review-status-1') => 2,
+      'custom_138' => '2 Dec 2014',
+      $this->getCustomField('review-status-2') => 6,
+      'custom_142' => '29 Jan 2015',
+    ));
+
+    $this->assertActivityCustomValues(
+      $this->activityID,
+      array(
+        // Mid year 1 status.
+        $this->getCustomField('mid-year-1-status') => 6,
+        $this->getCustomField('end-year-1-improvement') => 1,
+        $this->getCustomField('mid-year-1-improvement') => 0,
+      )
+    );
+  }
+
+  /**
    * Test that updating first progress check (custom 139) updates other fields.
    *
    *  - if status = 5 AND custom 226 is empty alter custom 226 to be same date.
@@ -201,7 +229,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
   function testActivityUpdateStatusFive() {
     civicrm_api3('activity', 'create', array(
       'id' => $this->activityID,
-      'custom_139' => 2,
+      $this->getCustomField('review-status-1') => 2,
       'custom_138' => '1 April 2015',
     ));
     $activity = civicrm_api3('activity', 'getsingle', array(
@@ -237,7 +265,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
   function testActivityUpdateStatusFiveOnlyOnce() {
     civicrm_api3('activity', 'create', array(
       'id' => $this->activityID,
-      'custom_139' => 5,
+      $this->getCustomField('review-status-1') => 5,
       'custom_138' => '1 April 2015',
     ));
 
@@ -268,7 +296,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
   function testActivityUpdateSetsNextHalfAndFullYearReview() {
     civicrm_api3('activity', 'create', array(
       'id' => $this->activityID,
-      'custom_139' => 3,
+      $this->getCustomField('review-status-1') => 3,
       'custom_138' => '1 April 2015',
     ));
 
@@ -326,7 +354,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
   function testActivityUpdateSetsTwoYearHalfAndFullYearReview() {
     civicrm_api3('activity', 'create', array(
       'id' => $this->activityID,
-      'custom_139' => 1,
+      $this->getCustomField('review-status-1') => 1,
       'custom_138' => '1 April 2015',
       'custom_143' => 2,
       'custom_142' => '1 Oct 2015',
@@ -379,7 +407,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
       'id' => $this->activityID,
       'activity_date_time' => '1 Sep 2015',
       'custom_138' => '1 Feb 2016',
-      'custom_139' => 3,
+      $this->getCustomField('review-status-1') => 3,
     ));
 
     $this->assertActivityCustomValues(
@@ -411,7 +439,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
       'id' => $this->activityID,
       'activity_date_time' => '1 Sep 2015',
       'custom_138' => '1 Nov 2015',
-      'custom_139' => 1,
+      $this->getCustomField('review-status-1') => 1,
       'custom_142' => '1 Feb 2016',
       'custom_143' => 2,
       'custom_144' => '1 Oct 2016',
@@ -463,7 +491,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
       'id' => $this->activityID,
       'activity_date_time' => '22 Oct 2014',
       'custom_138' => '20 Nov 2014 ',
-      'custom_139' => 2,
+      $this->getCustomField('review-status-1') => 2,
     ));
     $this->assertActivityCustomValues(
       $this->activityID,
@@ -516,7 +544,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals(strtotime($activity[$key]), strtotime($value), 'Failed on ' . $key);
       }
       else {
-        $this->assertEquals($activity[$key], $value, 'Failed on ' . $key);
+        $this->assertEquals($activity[$key], $value, 'Failed on ' . $key. ' ' . $this->getCustomFieldFunction($key));
       }
     }
   }
@@ -525,15 +553,43 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
    * Get the relevant custom field for the function.
    *
    * @param string $function
+   * @param string $prefix
+   *   String to prepend, generally 'custom_' or ''.
    *
    * @return string
    */
-  function getCustomField($function) {
-    $fields = array(
-      'mid-year-1-improvement' => 'custom_233',
-      'end-year-1-improvement' => 'custom_232',
-    );
-    return $fields[$function];
-
+  function getCustomField($function, $prefix = 'custom_') {
+    $fields = $this->getFieldMap();
+    return $prefix . $fields[$function];
   }
+
+  /**
+   * Get the relevant custom field for the function.
+   *
+   * @param int $id
+   * @param string $prefix
+   *   String to prepend, generally 'custom_' or ''.
+   *
+   * @return string
+   */
+  function getCustomFieldFunction($id, $prefix = 'custom_') {
+    $fields = array_flip($this->getFieldMap());
+    return $fields[str_replace($prefix, '', $id)];
+  }
+
+  /**
+   * @return array
+   */
+  protected function getFieldMap() {
+    $fields = array(
+      'review-status-1' => 139,
+      'review-status-2' => 143,
+      'mid-year-1-status' => 230,
+      'end-year-1-status' => 234,
+      'mid-year-1-improvement' => 233,
+      'end-year-1-improvement' => 232,
+    );
+    return $fields;
+  }
+
 }
