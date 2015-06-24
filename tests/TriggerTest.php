@@ -182,8 +182,7 @@ class TriggerTest extends PHPUnit_Framework_TestCase {
     $this->assertActivityCustomValues(
       $this->activityID,
       array(
-        // Mid year 1 status.
-        'custom_230' => 6,
+        $this->getCustomField('mid-year-1-status') => 6,
         $this->getCustomField('mid-year-1-improvement') => 1,
       )
     );

@@ -158,12 +158,10 @@ function altedtriggers_civicrm_custom($op, $groupID, $entityID, &$params) {
       $updatePeriod = _altedtriggers_calculate_update_period($statusUpdateDate, $activityStartDate);
       $newCustomParams['custom_' . $endOfSemesterFields[$updatePeriod]['status_field']] = $statusUpdateValue;
 
-      if ($statusUpdateValue != 6) {
-        $improvementField = 'custom_' . $endOfSemesterFields[$updatePeriod]['improvement'];
-        $newCustomParams[$improvementField] =
-          _altedtriggers_get_difference($allCustomValues, $endOfSemesterFields[$updatePeriod]['previous_status'], $statusUpdateValue, $newCustomParams, $statusUpdateField);
+      $improvementField = 'custom_' . $endOfSemesterFields[$updatePeriod]['improvement'];
+      $newCustomParams[$improvementField] =
+        _altedtriggers_get_difference($allCustomValues, $endOfSemesterFields[$updatePeriod]['previous_status'], $statusUpdateValue, $newCustomParams, $improvementField);
       }
-    }
   }
 
   civicrm_api3('activity', 'create', $newCustomParams);
@@ -342,12 +340,13 @@ function _altedtriggers_get_review_order($activityStartDate) {
  * @return int
  */
 function _altedtriggers_get_difference($allCustomValues, $customFieldID, $newValue, $newCustomParams, $statusUpdateField) {
+  if ($newValue == 6) {
+    return isset($newCustomParams[$statusUpdateField]) ? $newCustomParams[$statusUpdateField] : 0;
+  }
   $customFieldName = 'custom_' . $customFieldID;
   $originalValue = !empty($newCustomParams[$customFieldName]) ? $newCustomParams[$customFieldName] : CRM_Utils_Array::value($customFieldID, $allCustomValues, 1);
   $difference = $newValue - $originalValue;
-  if ($newValue == 6) {
-    return !empty($newCustomParams[$statusUpdateField]) ? $newCustomParams[$statusUpdateField] : CRM_Utils_Array::value($customFieldID, $allCustomValues, 0);
-  }
+
   if ($difference > 0) {
     return $difference;
   }
